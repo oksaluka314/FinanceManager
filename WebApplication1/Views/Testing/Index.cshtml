@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Тестування продуктивності";
+}
+
+<div class="container mt-4">
+    <h2> Тестування алгоритмів</h2>
+    <p class="text-muted">Тут проводиться тестування алгоритмів на великих обсягах даних.</p>
+
+    <div class="card p-4 shadow-sm">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label>Кількість елементів для тесту:</label>
+                <select id="countSelect" class="form-select">
+                    <option value="1000">1,000 елементів</option>
+                    <option value="5000" selected>5,000 елементів</option>
+                    <option value="10000">10,000 елементів</option>
+                    <option value="50000">50,000 елементів </option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button onclick="runTests()" class="btn btn-primary w-100">
+                    <i class="bi bi-speedometer2"></i> Запустити тест
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="text-center mt-5" style="display:none;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p>Генеруємо дані та проводимо розрахунки...</p>
+    </div>
+
+    <div id="resultsArea" class="mt-4" style="display:none;">
+        <h3>Результати:</h3>
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Вид</th>
+                    <th>Алгоритм</th>
+                    <th>Опис</th>
+                    <th>Кількість даних</th>
+                    <th>Час виконання (мс)</th>
+                </tr>
+            </thead>
+            <tbody id="resultsTableBody">
+            </tbody>
+        </table>
+
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i>
+            <strong>Примітка:</strong> Тест виконується на згенерованих у пам'яті даних, щоб не навантажувати реальну базу даних.
+        </div>
+    </div>
+</div>
+
+<script>
+    async function runTests() {
+        const count = document.getElementById('countSelect').value;
+        const loading = document.getElementById('loading');
+        const resultsArea = document.getElementById('resultsArea');
+        const tbody = document.getElementById('resultsTableBody');
+
+        // Показуємо спінер, ховаємо стару таблицю
+        loading.style.display = 'block';
+        resultsArea.style.display = 'none';
+        tbody.innerHTML = '';
+
+        try {
+            // Відправляємо запит на сервер
+            const response = await fetch(`/Testing/RunBenchmark?count=${count}`, { method: 'POST' });
+            const data = await response.json();
+
+            // Малюємо таблицю
+            data.forEach(item => {
+                    const row = `<tr>
+        <td><span class="badge bg-secondary">${item.group}</span></td> <td class="fw-bold">${item.algorithmName}</td>
+        <td>${item.description}</td>
+        <td>${item.itemCount}</td>
+        <td class="${item.timeTaken < 10 ? 'text-success' : 'text-danger'}">
+            ${item.timeTaken.toFixed(4)} ms
+        </td>
+    </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            resultsArea.style.display = 'block';
+        } catch (error) {
+            alert("Помилка при виконанні тесту: " + error);
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+</script>

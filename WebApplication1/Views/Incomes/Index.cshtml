@@ -1,0 +1,28 @@
+﻿@model IEnumerable<FinanceManager.Models.Income>
+@{
+    ViewData["Title"] = "Мої Доходи";
+}
+
+<h1>💰 Мої Доходи</h1>
+<p><a asp-action="Create" class="btn btn-success">Додати дохід +</a></p>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Джерело</th><th>Дата</th><th>Сума</th><th>Дії</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Source</td>
+                <td>@item.Date.ToShortDateString()</td>
+                <td class="text-success fw-bold">+@item.Amount.ToString("C")</td>
+                <td>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Видалити?');">
+                        <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

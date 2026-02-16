@@ -1,0 +1,181 @@
+﻿@{
+    ViewData["Title"] = "Фінансовий помічник";
+
+    // Отримуємо дані з ViewBag з безпечним перетворенням типів
+    var totalExpenses = ViewBag.TotalExpenses as decimal? ?? 0;
+    var recentExpenses = ViewBag.RecentExpenses as List<FinanceManager.Models.Expense>;
+    var topPlaces = ViewBag.TopPlaces as Dictionary<string, int>;
+    var totalIncomes = (decimal)(ViewBag.TotalIncomes ?? 0); // Нове
+    var balance = (decimal)(ViewBag.Balance ?? 0);
+    var categorySummary = ViewBag.CategorySummary as Dictionary<string, decimal>;
+}
+
+<div class="text-center mb-5">
+    <h1 class="display-4 fw-bold text-primary">Фінансовий помічник</h1>
+    <p class="lead">Ваша статистика витрат</p>
+</div>
+
+
+<div class="row text-center mb-5">
+    <div class="col-md-4 mb-3">
+        <div class="card shadow border-0 h-100 border-start border-success border-5">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Всього зароблено</h6>
+                <h2 class="text-success fw-bold">@totalIncomes.ToString("C0")</h2>
+                <a asp-controller="Incomes" asp-action="Index" class="btn btn-sm btn-outline-success mt-2">Історія доходів</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow border-0 h-100 border-start border-danger border-5">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Всього витрачено</h6>
+                <h2 class="text-danger fw-bold">@totalExpenses.ToString("C0")</h2>
+                <a asp-controller="Expenses" asp-action="Index" class="btn btn-sm btn-outline-danger mt-2">Історія витрат</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow border-0 h-100 bg-primary text-white">
+            <div class="card-body">
+                <h6 class="text-white-50 text-uppercase">Ваш баланс</h6>
+                <h1 class="fw-bold">@balance.ToString("C0")</h1>
+                <small>Залишок коштів</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0 py-3">
+                <h4 class="mb-0 fw-bold">🕒 Останні операції</h4>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    @if (recentExpenses != null && recentExpenses.Any())
+                    {
+                        foreach (var item in recentExpenses)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <div class="fw-bold">@item.Description</div>
+                                    <small class="text-muted">@item.Date.ToShortDateString() • @item.Category</small>
+                                </div>
+                                <span class="badge bg-danger rounded-pill px-3 py-2">
+                                    -@item.Amount.ToString("C0")
+                                </span>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-center py-4 text-muted">
+                            Тут будуть ваші останні витрати
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0 py-3">
+                <h4 class="mb-0 fw-bold">📊 По категоріях</h4>
+            </div>
+            <div class="card-body">
+                @if (categorySummary != null && categorySummary.Any())
+                {
+                    <table class="table table-hover">
+                        <tbody>
+                            @foreach (var pair in categorySummary.OrderByDescending(x => x.Value))
+                            {
+                                <tr>
+                                    <td class="w-50">
+                                        <a asp-controller="Expenses"
+                                           asp-action="Index"
+                                           asp-route-category="@pair.Key"
+                                           class="text-decoration-none fw-bold text-primary">
+                                            @pair.Key 🔗
+                                        </a>
+                                    </td>
+                                    <td class="text-end fw-bold">@pair.Value.ToString("C0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-5">
+                        Додайте витрати, щоб побачити статистику
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body">
+                <h4 class="card-title fw-bold text-center mb-4">🏆 Топ місць, де ви витрачаєте гроші</h4>
+                
+
+                <div class="row justify-content-center">
+                    @if (topPlaces != null && topPlaces.Any())
+                    {
+                        int rank = 1;
+                        foreach (var place in topPlaces)
+                        {
+                            <div class="col-md-2 col-sm-4 text-center mb-3">
+                                <div class="card h-100 border-primary border-2">
+                                    <div class="card-header bg-transparent border-0">
+                                        <span class="badge bg-primary rounded-circle p-2">#@rank</span>
+                                    </div>
+                                    <div class="card-body pt-0">
+                                        <h5 class="fw-bold text-uppercase text-dark">@place.Key</h5>
+                                        <small class="text-muted">Покупок: @place.Value</small>
+                                    </div>
+                                </div>
+                            </div>
+                            rank++;
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            Недостатньо даних для аналізу. Додайте більше витрат з різними описами!
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@{
+    var warnings = ViewBag.LimitWarnings as List<string>;
+}
+
+@if (warnings != null && warnings.Any())
+{
+    <div style="position: fixed; top: 80px; right: 20px; z-index: 9999; width: 350px;">
+        @foreach (var msg in warnings)
+        {
+            <div class="alert alert-danger shadow-lg border-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-start">
+                    <span class="fs-4 me-2">🛑</span>
+                    <div>
+                        <strong>Ліміт перевищено!</strong><br />
+                        <small>@msg</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+}
